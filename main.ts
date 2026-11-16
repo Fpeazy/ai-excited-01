@@ -3,13 +3,16 @@
 // the output directory as entry.png. It writes the same bytes every run:
 // a plain copy of a fixed file, no generation, no network, no clock.
 
-import { copyFileSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { copyFileSync, mkdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
-copyFileSync(
-  new URL('./entry.png', import.meta.url),
-  join(OUTPUT_DIR, 'entry.png'),
-);
+const source = new URL('./entry.png', import.meta.url);
+const dest = join(OUTPUT_DIR, 'entry.png');
+copyFileSync(source, dest);
+// Self-check: the copy must be the whole image, byte for byte.
+if (statSync(source).size !== statSync(dest).size) {
+  throw new Error('entry.png copy is incomplete');
+}
